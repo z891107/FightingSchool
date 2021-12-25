@@ -265,8 +265,12 @@ public class PieceManager : MonoBehaviour {
         mSpawnPieceType = mPieceTypes[data.mSpawnTypeIndex];
         mSpawnPieceAttackRange = data.mAttackRange;
 
-        mBoard.ShowOutlineCells(mTeamsSpawnRectArea[mTurnHandler.mCurrentTeamNum][0], 
-                                mTeamsSpawnRectArea[mTurnHandler.mCurrentTeamNum][1], true);
+        OutlineTeamsSpawnCells(mTurnHandler.mCurrentTeamNum);
+    }
+
+    public void OutlineTeamsSpawnCells(int teamNum) {
+        mBoard.ShowOutlineCells(mTeamsSpawnRectArea[teamNum][0], 
+                                mTeamsSpawnRectArea[teamNum][1], true);
     }
 
     public void OnPieceKilled(object sender, EventArgs e) {

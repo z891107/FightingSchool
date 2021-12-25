@@ -6,159 +6,161 @@ using UnityEngine.UI;
 using TMPro;
 
 public class CardManager : MonoBehaviour {
-    public event EventHandler CardUsed;
+	public event EventHandler CardUsed;
 
-    public GameObject mCardPrefab;
+	public GameObject mCardPrefab;
 
-    public GameObject mCanvas;
-    public RectTransform mPlacingCardRectTransform;
-    public UIHandler mUIHandler;
-    public GameManager mGameManager;
-    public PieceManager mPieceManager;
-    public Board mBoard;
-    public TurnHandler mTurnHandler;
+	public GameObject mCanvas;
+	public RectTransform mPlacingCardRectTransform;
+	public UIHandler mUIHandler;
+	public GameManager mGameManager;
+	public PieceManager mPieceManager;
+	public Board mBoard;
+	public TurnHandler mTurnHandler;
 
-    List<CardEffectData> mAllCardsEffectData = new List<CardEffectData>();
-    public List<Card> mCards;
+	List<CardEffectData> mAllCardsEffectData = new List<CardEffectData>();
+	public List<Card> mCards;
 
-    public Card mCurrentSelectedCard;
-    public List<BasePiece> mCurrentSelectedPiece;
-    bool mIsUsingCard = false;
+	public Card mCurrentSelectedCard;
+	public List<Cell> mCurrentSelectedCell;
+	bool mIsUsingCard = false;
 
-    Dictionary<Card, int> mTurnToInvokeCardsCallback = new Dictionary<Card, int>();
+	Dictionary<Card, int> mTurnToInvokeCardsCallback = new Dictionary<Card, int>();
 
-    void Awake() {
-        mGameManager.GoBackButtonPressed += OnGoBackButtonPressed;
-        mBoard.OutlineCellClicked += OnOutlineCellClicked;
-        mTurnHandler.NextTurn += OnNextTurn;
-    }
-    
-    void MakeCards() {
-        for (int i = 1; i <= 6; i++) {
-            CardEffectData effectData = (CardEffectData)Activator.CreateInstance(Type.GetType("Card_" + i), new object[] {i - 1, this});
-            mAllCardsEffectData.Add(effectData);
-        }
+	void Awake() {
+		mGameManager.GoBackButtonPressed += OnGoBackButtonPressed;
+		mBoard.OutlineCellClicked += OnOutlineCellClicked;
+		mTurnHandler.NextTurn += OnNextTurn;
+	}
 
-        CardEffectData effect = (CardEffectData)Activator.CreateInstance(Type.GetType("Card_10"), new object[] {9, this});
-        mAllCardsEffectData.Add(effect);
-        effect = (CardEffectData)Activator.CreateInstance(Type.GetType("Card_13"), new object[] {12, this});
-        mAllCardsEffectData.Add(effect);
-        effect = (CardEffectData)Activator.CreateInstance(Type.GetType("Card_16"), new object[] {15, this});
-        mAllCardsEffectData.Add(effect);
-    }
+	void MakeCards() {
+		for (int i = 1; i <= 500; i++) {
+			Type cardType = Type.GetType("Card_" + i);
 
-    public void Init() {
-        MakeCards();
+			if (cardType != null) {
+				CardEffectData effectData = (CardEffectData)Activator.CreateInstance(cardType, new object[] { i - 1, this });
+				mAllCardsEffectData.Add(effectData);
+			}
+		}
+	}
 
-        for (int i = 0; i < 6; i++) {
-        GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
+	public void Init() {
+		MakeCards();
 
-        Card newPiece = newPieceObject.AddComponent<Card>();
 
-        newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-        newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-        newPiece.EndDrag += mUIHandler.OnCardEndDrag;
-
-        mCards.Add(newPiece);
-
-        newPiece.Setup(mAllCardsEffectData[i], this, mPlacingCardRectTransform);
-        }
 
         {
-        GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
+			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
 
-        Card newPiece = newPieceObject.AddComponent<Card>();
+			Card newPiece = newPieceObject.AddComponent<Card>();
 
-        newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-        newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-        newPiece.EndDrag += mUIHandler.OnCardEndDrag;
+			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
+			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
+			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
 
-        mCards.Add(newPiece);
+			mCards.Add(newPiece);
 
-        newPiece.Setup(mAllCardsEffectData[6], this, mPlacingCardRectTransform);
-        }
-        {
-        GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
+			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 4], this, mPlacingCardRectTransform);
+		}
 
-        Card newPiece = newPieceObject.AddComponent<Card>();
+		{
+			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
 
-        newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-        newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-        newPiece.EndDrag += mUIHandler.OnCardEndDrag;
+			Card newPiece = newPieceObject.AddComponent<Card>();
 
-        mCards.Add(newPiece);
+			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
+			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
+			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
 
-        newPiece.Setup(mAllCardsEffectData[7], this, mPlacingCardRectTransform);
-        }
-        {
-        GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
+			mCards.Add(newPiece);
 
-        Card newPiece = newPieceObject.AddComponent<Card>();
+			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 3], this, mPlacingCardRectTransform);
+		}
+		{
+			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
 
-        newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-        newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-        newPiece.EndDrag += mUIHandler.OnCardEndDrag;
+			Card newPiece = newPieceObject.AddComponent<Card>();
 
-        mCards.Add(newPiece);
+			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
+			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
+			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
 
-        newPiece.Setup(mAllCardsEffectData[8], this, mPlacingCardRectTransform);
-        }
-    }
+			mCards.Add(newPiece);
 
-    public void SelectCard(Card card) {
-        mCurrentSelectedCard = card;
-    }
+			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 2], this, mPlacingCardRectTransform);
+		}
+		{
+			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
 
-    public void UnSelectCard(Card card) {
-        if (card == mCurrentSelectedCard){
-            mCurrentSelectedCard = null;
-        }
-    }
+			Card newPiece = newPieceObject.AddComponent<Card>();
 
-    public void OnConfirmUsingCardButtonPressed() {
-        if (mCurrentSelectedCard) {
-            var position = mPieceManager.mCurrentSelectedPiece.mCurrentCell.mBoardPosition;
-            var attackRange = mPieceManager.mCurrentSelectedPiece.mAttackRange;
-            mBoard.ShowOutlineCells(position, attackRange);
+			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
+			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
+			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
 
-            mIsUsingCard = true;
-            mCurrentSelectedPiece.Clear();
-        }
-    }
+			mCards.Add(newPiece);
 
-    void OnOutlineCellClicked(object sender, EventArgs e) {
-        Cell cell = sender as Cell;
+			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 1], this, mPlacingCardRectTransform);
+		}
+	}
 
-        if (mIsUsingCard && cell.mCurrentPiece) {
-            mCurrentSelectedPiece.Add(cell.mCurrentPiece);
+	public void SelectCard(Card card) {
+		mCurrentSelectedCard = card;
+	}
 
-            bool successful = mCurrentSelectedCard.Action();
+	public void UnSelectCard(Card card) {
+		if (card == mCurrentSelectedCard) {
+			mCurrentSelectedCard = null;
+		}
+	}
 
-            if (successful) {
-                mIsUsingCard = false;
+	public void OnConfirmUsingCardButtonPressed() {
+		if (mCurrentSelectedCard) {
+			mCurrentSelectedCard.ShowRange();
 
-                if (mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback > 0) {
-                    int round = mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback;
+			mIsUsingCard = true;
+			mCurrentSelectedCell.Clear();
+		}
+	}
 
-                    mTurnToInvokeCardsCallback.Add(mCurrentSelectedCard, round);
-                }
+	void OnOutlineCellClicked(object sender, EventArgs e) {
+		Cell cell = sender as Cell;
 
-                CardUsed(this, EventArgs.Empty);
-            }
-        }
-    }
+		if (!mIsUsingCard) {
+			return;
+		}
 
-    void OnNextTurn(object sender, EventArgs e) {
-        List<Card> cards = new List<Card>(mTurnToInvokeCardsCallback.Keys);
-        foreach (var card in cards) {
-            if (--mTurnToInvokeCardsCallback[card] <= 0) {
-                card.DelayedAction();
-                mTurnToInvokeCardsCallback.Remove(card);
-            }
-        }
-    }
+		if (mCurrentSelectedCard.mEffectData as PieceChangeAttr == null ||
+		cell.mCurrentPiece) {
+			mCurrentSelectedCell.Add(cell);
 
-    void OnGoBackButtonPressed(object sender, EventArgs e) {
-        UnSelectCard(mCurrentSelectedCard);
-    }
+			bool successful = mCurrentSelectedCard.Action();
+
+			if (successful) {
+				mIsUsingCard = false;
+
+				if (mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback > 0) {
+					int round = mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback;
+
+					mTurnToInvokeCardsCallback.Add(mCurrentSelectedCard, round);
+				}
+
+				CardUsed(this, EventArgs.Empty);
+			}
+		}
+	}
+
+	void OnNextTurn(object sender, EventArgs e) {
+		List<Card> cards = new List<Card>(mTurnToInvokeCardsCallback.Keys);
+		foreach (var card in cards) {
+			if (--mTurnToInvokeCardsCallback[card] <= 0) {
+				card.DelayedAction();
+				mTurnToInvokeCardsCallback.Remove(card);
+			}
+		}
+	}
+
+	void OnGoBackButtonPressed(object sender, EventArgs e) {
+		UnSelectCard(mCurrentSelectedCard);
+	}
 }
