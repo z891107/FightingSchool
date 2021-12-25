@@ -6,6 +6,6 @@ public class Card_29 : PieceChangeAttr {
 	public Card_29(int id, CardManager cardManager) : base(id, cardManager) { }
 
 	public override void ActionCallback(BasePiece piece) {
-		piece.mRichness += 2;
+		piece.AddAttackPower(AttackType.Richness, 2);
 	}
 }

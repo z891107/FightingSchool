@@ -8,7 +8,7 @@ public class Card_10 : PieceChangeAttr {
 	public override void ActionCallback(BasePiece piece) {
 		mTurnToInvokeDelayedCallback = 4;
 		mDelayedCallback = (piece) => {
-			piece.mRichness += 5;
+			piece.AddAttackPower(AttackType.Richness, 5);
 		};
 	}
 }

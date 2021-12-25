@@ -16,18 +16,18 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        mBoard.Create();
+        mBoard.Create();        //把 16x16 的棋盤 生成出來
 
-        mPieceManager.Setup(mBoard);
+        mPieceManager.Setup(mBoard);    //生成初始 8隻角色
 
-        mTurnHandler.GameStart();
+        mTurnHandler.GameStart();       //管理遊戲回合數
 
-        mResourceHandler.Init();
+        mResourceHandler.Init();        //管理資源
 
-        mCardManager.Init();
+        mCardManager.Init();        //管理卡片，生成初始 200張卡
 
-        mUIHandler.AdaptScreenResolution();
-        mUIHandler.ResetGUI();
+        mUIHandler.AdaptScreenResolution();     //自適應解析度
+        mUIHandler.ResetGUI();      //初始化 UI
     }
 
     void Update() {

@@ -8,6 +8,6 @@ public class Card_4 : PieceChangeAttr
 
     public override void ActionCallback(BasePiece piece) {
         piece.mCurrentHealth += 2;
-        piece.mRichness += 3;
+        piece.AddAttackPower(AttackType.Richness, 3);
     }
 }

@@ -7,6 +7,7 @@ public class Card_8 : PieceChangeAttr {
 
 	public override void ActionCallback(BasePiece piece) {
 		piece.mEnergy += 1;
-		piece.mCharm = 0;
+		piece.mCurrentEnergy += 1;
+		piece.AddAttackPower(AttackType.Charm, -piece.mCharm);
 	}
 }

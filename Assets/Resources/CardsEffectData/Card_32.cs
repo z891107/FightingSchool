@@ -7,6 +7,6 @@ public class Card_32 : PieceChangeAttr {
 
 	public override void ActionCallback(BasePiece piece) {
 		piece.mCurrentHealth -= 4;
-		piece.mCharm += 4;
+		piece.AddAttackPower(AttackType.Charm, 4);
 	}
 }

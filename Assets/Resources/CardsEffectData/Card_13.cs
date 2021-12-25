@@ -6,6 +6,6 @@ public class Card_13 : PieceChangeAttr {
 	public Card_13(int id, CardManager cardManager) : base(id, cardManager) { }
 
 	public override void ActionCallback(BasePiece piece) {
-		piece.mCharm -= 4;
+		piece.AddAttackPower(AttackType.Charm, -4);
 	}
 }

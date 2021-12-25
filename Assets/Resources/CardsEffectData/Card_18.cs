@@ -6,6 +6,6 @@ public class Card_18 : PieceChangeAttr {
 	public Card_18(int id, CardManager cardManager) : base(id, cardManager) { }
 
 	public override void ActionCallback(BasePiece piece) {
-		piece.mCommunication += 3;
+		piece.AddAttackPower(AttackType.Communication, 3);
 	}
 }

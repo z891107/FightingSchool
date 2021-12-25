@@ -60,7 +60,7 @@ public class CardManager : MonoBehaviour {
 
 			mCards.Add(newPiece);
 
-			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 4], this, mPlacingCardRectTransform);
+			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 4], this, mPlacingCardRectTransform);		//[mAllCardsEffectData.Count - 4] => [36](所要的卡片)
 		}
 
 		{

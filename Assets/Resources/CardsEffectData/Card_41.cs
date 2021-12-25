@@ -7,5 +7,6 @@ public class Card_41 : PieceChangeAttr {
 
 	public override void ActionCallback(BasePiece piece) {
 		piece.mHealth += 5;
+		piece.mCurrentHealth += 5;
 	}
 }

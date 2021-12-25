@@ -7,11 +7,11 @@ public class Card_3 : PieceChangeAttr
     public Card_3(int id, CardManager cardManager) : base(id, cardManager) {}
 
     public override void ActionCallback(BasePiece piece) {
-        piece.mRichness -= 1;
+        piece.AddAttackPower(AttackType.Richness, -1);
 
         mTurnToInvokeDelayedCallback = 4;
         mDelayedCallback = (piece) => {
-            piece.mRichness += 3;
+            piece.AddAttackPower(AttackType.Richness, 3);
         };
     }
 }
