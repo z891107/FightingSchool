@@ -33,6 +33,7 @@ public class UIHandler : MonoBehaviour
     public GameObject mMouseOverPieceInfoPanel;
     public GameObject mEmptyCardPanel;
     public GameObject mCardAndResourcePanel;
+    public GameObject mChangePanel;
 
     public RectTransform mPlacingCardRectTransform;
 
@@ -48,6 +49,7 @@ public class UIHandler : MonoBehaviour
     void Awake() {
         mGameManager.GoBackButtonPressed += OnGoBackButtonPressed;
         mTurnHandler.NextTurn += OnNextTurn;
+        mTurnHandler.EndOfRound += OnEndOfRound;
         mCardManager.CardUsed += OnCardUsed;
     }
 
@@ -84,6 +86,8 @@ public class UIHandler : MonoBehaviour
     }
 
     public void ResetGUI() {
+        mChangePanel.SetActive(false);
+
         ShowGUI(mSpawnPiecePanel, UIAlignment.LowerRight);
         ShowGUI(mCardAndResourcePanel, UIAlignment.UpperRight);
         //mCardAndResourcePanel.GetComponent<RectTransform>().sizeDelta *= (float)1.25;
@@ -133,7 +137,9 @@ public class UIHandler : MonoBehaviour
     public void OnNextTurn(object sender, EventArgs e) {
         ResetGUI();
     }
-
+    public void OnEndOfRound(object sender, EventArgs e) {
+        mChangePanel.SetActive(true);
+    }
     public void OnCardMouseOver(object sender, EventArgs e) {
         Card card = sender as Card;
         mCardAndResourcePanel.GetComponent<CardAndResource>().UpdateCardImage(card.mEffectData);

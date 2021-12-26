@@ -9,6 +9,7 @@ public class TurnHandlerEventData : EventArgs {
 }
 
 public class TurnHandler : MonoBehaviour {
+    public event EventHandler EndOfRound;
     public event EventHandler NextTurn;
     public event EventHandler<TurnHandlerEventData> NextRound;
 
@@ -52,7 +53,9 @@ public class TurnHandler : MonoBehaviour {
 
         NextTurn(this, EventArgs.Empty);
     }
-
+    public void OnEndOfRoundButtonClicked() {
+        EndOfRound(this, EventArgs.Empty);
+    }
     List<int> RandomlyGenerateTeamSequence() {
         List<int> result = new List<int>();
 
