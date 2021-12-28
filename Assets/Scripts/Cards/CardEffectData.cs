@@ -17,5 +17,5 @@ public abstract class CardEffectData
 
     public abstract bool Action();
     public abstract void DelayedAction();
-    public abstract void ShowRange();
+    public abstract bool ShowRange();
 }

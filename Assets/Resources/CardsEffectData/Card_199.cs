@@ -9,7 +9,9 @@ public class Card_199 : PieceChangePosition {
 		piece.Place(cell);
 	}
 
-	public override void ShowRange() {
+	public override bool ShowRange() {
 		mCardManager.mBoard.ShowOutlineCells(new Vector2Int(0, 0), new Vector2Int(15, 15), true);
+
+		return true;
 	}
 }

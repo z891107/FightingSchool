@@ -3,8 +3,6 @@ using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
-using UnityEngine.Pool;
-using System.Numerics;
 
 public enum CellState {
 	None,
@@ -15,24 +13,42 @@ public enum CellState {
 	OutOfBounds
 }
 
+public class TeamBaseCrashedEventArgs : EventArgs {
+	public int mTeamNum;
+}
+
 public class Board : MonoBehaviour {
 	public event EventHandler OutlineCellClicked;
+	public event EventHandler<TeamBaseCrashedEventArgs> TeamBaseCrashed;
 
 	public GameObject mCellPrefab;
 
 	public GameManager mGameManager;
 	public PieceManager mPicecManager;
 	public TurnHandler mTurnHandler;
+	public CardManager mCardManager;
+	public UIHandler mUIHandler;
 
 	[HideInInspector]
 	public Cell[,] mCells = new Cell[16, 16];
 
 	List<Cell> mOutlineCells = new List<Cell>();
 
+	[SerializeField]
+	GameObject[] mTeamsBase = new GameObject[4];
+	Vector2Int[][] mTeamsBaseArea = {
+	    new []{ new Vector2Int(0, 0)  , new Vector2Int(1, 1)   },
+	    new []{ new Vector2Int(0, 14) , new Vector2Int(1, 15)  },
+	    new []{ new Vector2Int(14, 14), new Vector2Int(15, 15) },
+	    new []{ new Vector2Int(14, 0) , new Vector2Int(15, 1)  },
+    };
+
 	void Awake() {
 		mGameManager.GoBackButtonPressed += OnGoBackButtonPressed;
 		mTurnHandler.NextTurn += OnNextTurn;
 		mTurnHandler.NextRound += OnNextRound;
+		mCardManager.CardUsed += OnCardUsed;
+		mUIHandler.GUIReseted += OnGUIReseted;
 	}
 
 	public void Create() {
@@ -57,6 +73,10 @@ public class Board : MonoBehaviour {
 			Cell targetCell = mCells[position.x, position.y];
 
 			if (targetCell.mCurrentPiece != null) {
+				if (targetCell.mCurrentPiece.mInvisible) {
+					return CellState.Free;
+				}
+
 				if (targetCell.mCurrentPiece.mTeamNum == checkingPiece.mTeamNum) {
 					return CellState.Friendly;
 				} else {
@@ -75,7 +95,11 @@ public class Board : MonoBehaviour {
 			Cell targetCell = mCells[position.x, position.y];
 
 			if (targetCell.mCurrentPiece != null) {
-				return CellState.Obstacle;
+				if (targetCell.mCurrentPiece.mInvisible) {
+					return CellState.Free;
+				} else {
+					return CellState.Obstacle;
+				}
 			}
 
 			return CellState.Free;
@@ -189,7 +213,7 @@ public class Board : MonoBehaviour {
 	public void ShowOutlineCells(Vector2Int start, Vector2Int end, bool isOnlyFreeCell) {
 		for (int y = start.y; y <= end.y; y++) {
 			for (int x = start.x; x <= end.x; x++) {
-                ShowOutlineCell(new Vector2Int(x, y), isOnlyFreeCell);
+				ShowOutlineCell(new Vector2Int(x, y), isOnlyFreeCell);
 			}
 		}
 	}
@@ -199,15 +223,25 @@ public class Board : MonoBehaviour {
 		ShowOutlineCells(new Vector2Int(0, center.y), new Vector2Int(15, center.y), isOnlyFreeCell);
 	}
 
+	public void ShowOutlineCellsInAngledCross(Vector2Int center, bool isOnlyFreeCell) {
+		for (int x = center.x - 15, y = center.y - 15; x <= 15 && y <= 15; x++, y++) {
+			ShowOutlineCell(new Vector2Int(x, y), isOnlyFreeCell);
+		}
+
+		for (int x = center.x - 15, y = center.y + 15; x <= 15 && y >= 0; x++, y--) {
+			ShowOutlineCell(new Vector2Int(x, y), isOnlyFreeCell);
+		}
+	}
+
 	public void ShowOutlineCellsRoundAllPiece(Vector2Int center, bool isOnlyFreeCell) {
 		foreach (BasePiece piece in mPicecManager.mPieces) {
-            Vector2Int position = piece.mCurrentCell.mBoardPosition;
+			Vector2Int position = piece.mCurrentCell.mBoardPosition;
 
-            ShowOutlineCell(position + Vector2Int.up, isOnlyFreeCell);
-            ShowOutlineCell(position + Vector2Int.down, isOnlyFreeCell);
-            ShowOutlineCell(position + Vector2Int.left, isOnlyFreeCell);
-            ShowOutlineCell(position + Vector2Int.right, isOnlyFreeCell);
-        }
+			ShowOutlineCell(position + Vector2Int.up, isOnlyFreeCell);
+			ShowOutlineCell(position + Vector2Int.down, isOnlyFreeCell);
+			ShowOutlineCell(position + Vector2Int.left, isOnlyFreeCell);
+			ShowOutlineCell(position + Vector2Int.right, isOnlyFreeCell);
+		}
 	}
 
 
@@ -244,7 +278,7 @@ public class Board : MonoBehaviour {
 			}
 
 			for (Vector2Int position = center + Vector2Int.right * distance;
-                position.x > center.x;
+			position.x > center.x;
 			    position += Vector2Int.left + Vector2Int.down) {
 
 				ShowOutlineCell(position);
@@ -260,8 +294,8 @@ public class Board : MonoBehaviour {
 		}
 	}
 
-    public void ShowOutlineCell(Vector2Int position, bool isOnlyFreeCell) {
-        if (!isOnlyFreeCell || ValidateCell(position) == CellState.Free) {
+	public void ShowOutlineCell(Vector2Int position, bool isOnlyFreeCell) {
+		if (!isOnlyFreeCell || ValidateCell(position) == CellState.Free) {
 			ShowOutlineCell(position);
 		}
 	}
@@ -312,7 +346,60 @@ public class Board : MonoBehaviour {
 		}
 	}
 
+	public void OnCardUsed(object sender, EventArgs e) {
+		ClearOutlineCells();
+	}
+
 	public void OnGoBackButtonPressed(object sender, EventArgs e) {
 		ClearOutlineCells();
+	}
+
+	public void OnGUIReseted(object sender, EventArgs e) {
+		for (int i = 0; i < mTeamsBaseArea.Length; i++) {
+			Vector2Int start = mTeamsBaseArea[i][0], end = mTeamsBaseArea[i][1];
+			int pieceNum = 0;
+
+			for (int y = start.y; y <= end.y; y++) {
+				for (int x = start.x; x <= end.x; x++) {
+					if (mCells[x, y].mCurrentPiece && mCells[x, y].mCurrentPiece.mTeamNum != i) {
+						pieceNum++;
+					}
+				}
+			}
+
+			if (pieceNum == 4 && mTeamsBase[i]) {
+				CrashTeamBase(i);
+			}
+		}
+
+		for (int i = 0; i < 4; i++) {
+			if (mTeamsBase[i] && mPicecManager.TeamPiecesNum(i) == 0) {
+                CrashTeamBase(i);
+			}
+		}
+	}
+
+	public void CrashTeamBase(int teamNum) {
+		Destroy(mTeamsBase[teamNum]);
+		mTeamsBase[teamNum] = null;
+
+        int winTeamNum = -1;
+        for (int i = 0; i < 4; i++) {
+            if (mTeamsBase[i] && winTeamNum != -1) {
+                winTeamNum = -1;
+                break;
+            }
+            else if (mTeamsBase[i]) {
+                winTeamNum = i;
+            }
+        }
+
+        if (winTeamNum != -1) {
+            mUIHandler.ShowWinPanel(winTeamNum);
+        }
+
+		TeamBaseCrashedEventArgs args = new TeamBaseCrashedEventArgs();
+		args.mTeamNum = teamNum;
+		TeamBaseCrashed(this, args);
 	}
 }

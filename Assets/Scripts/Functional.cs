@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Functional : MonoBehaviour {
+public class Functional : UIUpdater {
     public PieceManager mPieceManager;
     public TurnHandler mTurnHandler;
 
@@ -14,15 +14,15 @@ public class Functional : MonoBehaviour {
         new Color32(114, 31, 110, 255),
     };
 
-    public Image mTeamColor;
+    public override void UpdateUI() {
+        UpdateImageColor("CurrentTeam", mTeamColors[mTurnHandler.mCurrentTeamNum]);
 
-    public Image[] mTeamSequence = new Image[4];
-
-    public void UpdateFunctional() {
-        mTeamColor.color = mTeamColors[mTurnHandler.mCurrentTeamNum];
-
-        for (int i = 0; i < mTeamSequence.Length; i++) {
-            mTeamSequence[i].color = mTeamColors[mTurnHandler.mCurrentTeamSequence[i]];
+        for (int i = 0; i < mTeamColors.Length; i++) {
+            if (mTurnHandler.mCurrentTeamSequence[i] != -1) {
+                UpdateImageColor("Team_" + (i + 1), mTeamColors[mTurnHandler.mCurrentTeamSequence[i]]);
+            } else {
+                UpdateImageColor("Team_" + (i + 1), Color.black);
+            }
         }
     }
 }

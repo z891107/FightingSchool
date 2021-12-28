@@ -4,6 +4,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Unity.VisualScripting;
 
 public class CardManager : MonoBehaviour {
 	public event EventHandler CardUsed;
@@ -19,7 +20,17 @@ public class CardManager : MonoBehaviour {
 	public TurnHandler mTurnHandler;
 
 	List<CardEffectData> mAllCardsEffectData = new List<CardEffectData>();
-	public List<Card> mCards;
+	List<Card>[] mTeamCards = {
+	new List<Card>(),
+	new List<Card>(),
+	new List<Card>(),
+	new List<Card>()
+    };
+	public List<Card> mCards {
+		get {
+			return mTeamCards[mTurnHandler.mCurrentTeamNum];
+		}
+	}
 
 	public Card mCurrentSelectedCard;
 	public List<Cell> mCurrentSelectedCell;
@@ -31,6 +42,7 @@ public class CardManager : MonoBehaviour {
 		mGameManager.GoBackButtonPressed += OnGoBackButtonPressed;
 		mBoard.OutlineCellClicked += OnOutlineCellClicked;
 		mTurnHandler.NextTurn += OnNextTurn;
+        mTurnHandler.NextRound += OnNextRound;
 	}
 
 	void MakeCards() {
@@ -46,62 +58,22 @@ public class CardManager : MonoBehaviour {
 
 	public void Init() {
 		MakeCards();
+	}
 
+	public Card RandomlyGenerateCard() {
+		GameObject newCardObject = Instantiate(mCardPrefab, mCanvas.transform);
+        newCardObject.SetActive(false);
 
+		Card newCard = newCardObject.AddComponent<Card>();
 
-        {
-			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
+		newCard.MouseOver += mUIHandler.OnCardMouseOver;
+		newCard.MouseOut += mUIHandler.OnCardMouseOut;
+		newCard.EndDrag += mUIHandler.OnCardEndDrag;
 
-			Card newPiece = newPieceObject.AddComponent<Card>();
+        int cardId = UnityEngine.Random.Range(0, mAllCardsEffectData.Count);
+		newCard.Setup(mAllCardsEffectData[cardId], this, mPlacingCardRectTransform);
 
-			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
-
-			mCards.Add(newPiece);
-
-			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 4], this, mPlacingCardRectTransform);		//[mAllCardsEffectData.Count - 4] => [36](所要的卡片)
-		}
-
-		{
-			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
-
-			Card newPiece = newPieceObject.AddComponent<Card>();
-
-			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
-
-			mCards.Add(newPiece);
-
-			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 3], this, mPlacingCardRectTransform);
-		}
-		{
-			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
-
-			Card newPiece = newPieceObject.AddComponent<Card>();
-
-			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
-
-			mCards.Add(newPiece);
-
-			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 2], this, mPlacingCardRectTransform);
-		}
-		{
-			GameObject newPieceObject = Instantiate(mCardPrefab, mCanvas.transform);
-
-			Card newPiece = newPieceObject.AddComponent<Card>();
-
-			newPiece.MouseOver += mUIHandler.OnCardMouseOver;
-			newPiece.MouseOut += mUIHandler.OnCardMouseOut;
-			newPiece.EndDrag += mUIHandler.OnCardEndDrag;
-
-			mCards.Add(newPiece);
-
-			newPiece.Setup(mAllCardsEffectData[mAllCardsEffectData.Count - 1], this, mPlacingCardRectTransform);
-		}
+        return newCard;
 	}
 
 	public void SelectCard(Card card) {
@@ -114,9 +86,33 @@ public class CardManager : MonoBehaviour {
 		}
 	}
 
+	public void UseCard() {
+		bool successful = mCurrentSelectedCard.Action();
+
+		if (successful) {
+			mIsUsingCard = false;
+
+			if (mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback > 0) {
+				int round = mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback;
+
+				mTurnToInvokeCardsCallback.Add(mCurrentSelectedCard, round);
+			}
+
+            mTeamCards[mTurnHandler.mCurrentTeamNum].Remove(mCurrentSelectedCard);
+
+			CardUsed(this, EventArgs.Empty);
+		}
+	}
+
 	public void OnConfirmUsingCardButtonPressed() {
 		if (mCurrentSelectedCard) {
-			mCurrentSelectedCard.ShowRange();
+			var needSelect = mCurrentSelectedCard.ShowRange();
+
+			if (!needSelect) {
+				UseCard();
+
+				return;
+			}
 
 			mIsUsingCard = true;
 			mCurrentSelectedCell.Clear();
@@ -130,23 +126,11 @@ public class CardManager : MonoBehaviour {
 			return;
 		}
 
-		if (mCurrentSelectedCard.mEffectData as PieceChangeAttr == null ||
+		if (mCurrentSelectedCard.mEffectData as PieceChange == null ||
 		cell.mCurrentPiece) {
 			mCurrentSelectedCell.Add(cell);
 
-			bool successful = mCurrentSelectedCard.Action();
-
-			if (successful) {
-				mIsUsingCard = false;
-
-				if (mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback > 0) {
-					int round = mCurrentSelectedCard.mEffectData.mTurnToInvokeDelayedCallback;
-
-					mTurnToInvokeCardsCallback.Add(mCurrentSelectedCard, round);
-				}
-
-				CardUsed(this, EventArgs.Empty);
-			}
+			UseCard();
 		}
 	}
 
@@ -158,6 +142,20 @@ public class CardManager : MonoBehaviour {
 				mTurnToInvokeCardsCallback.Remove(card);
 			}
 		}
+
+        for (int i = 0; i < 4; i++) {
+            foreach (var card in mTeamCards[i]) {
+                card.gameObject.SetActive(i == mTurnHandler.mCurrentTeamNum);
+            }
+        }
+	}
+
+    void OnNextRound(object sender, EventArgs e) {
+		for (int i = 0; i < 4; i++) {
+            if (mTeamCards[i].Count < 10) {
+                mTeamCards[i].Add(RandomlyGenerateCard());
+            }
+        }
 	}
 
 	void OnGoBackButtonPressed(object sender, EventArgs e) {

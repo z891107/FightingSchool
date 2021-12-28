@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Card_4 : PieceChangeAttr
+public class Card_4 : PieceChange
 {
     public Card_4(int id, CardManager cardManager) : base(id, cardManager) {}
 

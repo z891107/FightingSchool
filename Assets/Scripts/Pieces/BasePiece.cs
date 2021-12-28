@@ -30,6 +30,7 @@ public abstract class BasePiece : EventTrigger
     public Cell mCurrentCell = null;
 
     [HideInInspector]
+    public int mId;
     public int mTeamNum;
 
     protected Animator mAnimator;
@@ -37,7 +38,7 @@ public abstract class BasePiece : EventTrigger
     protected PieceManager mPieceManager;
     protected TurnHandler mTurnHandler;
 
-    int[] mExpOfLevelUpList = {0, 60, 70, 80, 90, 100};
+    int[] mExpOfLevelUpList = {0, 60, 70, 80, 90, 100, 100};
     Dictionary<AttackType, FieldInfo> mAttackTypeToFieldInfo = new Dictionary<AttackType, FieldInfo> {
         { AttackType.Strength    , typeof(BasePiece).GetField("mStrength") },
         { AttackType.Charm       , typeof(BasePiece).GetField("mCharm") },
@@ -51,7 +52,7 @@ public abstract class BasePiece : EventTrigger
     public int mCharm = 3;
     public int mRichness = 3;
 
-    public int _mSpeed = 3;
+    public int _mSpeed = 8;
     public int mSpeed {
         get { return _mSpeed; }
         set {
@@ -125,12 +126,17 @@ public abstract class BasePiece : EventTrigger
             if (value >= mExpOfLevelUp) {
                 _mCurrentExp = value - mExpOfLevelUp;
                 LevelUp();
+
+                if (mLevel == 5) { _mCurrentExp = mExpOfLevelUpList[5]; }
             }
             else {
                 _mCurrentExp = value;
             }
         }
     }
+
+    public bool mInvisible = false;
+    public bool mInactive = false;
 
     public AttackRange mAttackRange;
 
@@ -142,9 +148,15 @@ public abstract class BasePiece : EventTrigger
         mTurnHandler = GameObject.Find("PR_TurnHandler").GetComponent<TurnHandler>();
     }
 
-    public virtual void Setup(int newTeamNum, AttackRange newAttackRange, PieceManager newPieceManager)
+    public BasePiece ShallowClone() {
+        return (BasePiece)this.MemberwiseClone();
+    }
+
+    public virtual void Setup(int newTeamNum, int newId, AttackRange newAttackRange, PieceManager newPieceManager)
     {
         mTeamNum = newTeamNum;
+
+        mId = newId;
 
         mAttackRange = newAttackRange;
 
@@ -165,7 +177,7 @@ public abstract class BasePiece : EventTrigger
         mCurrentCell = newCell;
         mCurrentCell.mCurrentPiece = this;
 
-        transform.position = newCell.transform.position;
+        transform.position = newCell.transform.position + new Vector3(32, 32, 0);
     }
 
     public void Move(Cell newCell) {
@@ -174,7 +186,29 @@ public abstract class BasePiece : EventTrigger
         mCurrentEnergy -= 1;
     }
 
+    public void BecameInvisible() {
+        Image image = GetComponent<Image>();
+        image.color = new Color(image.color.r, image.color.g, image.color.b, (float)0.5);
+
+        mCurrentCell.mCurrentPiece = null;
+
+        mInvisible = true;
+    }
+
+    public void BecameVisible() {
+        Image image = GetComponent<Image>();
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 1);
+
+        mCurrentCell.mCurrentPiece = this;
+
+        mInvisible = false;
+    }
+
     public void RestoreEnergy() {
+        if (mInactive) {
+            return;
+        }
+
         mCurrentEnergy = mEnergy;
 
         GetComponent<Image>().material = null;
@@ -188,8 +222,19 @@ public abstract class BasePiece : EventTrigger
         return mCurrentEnergy == 0;
     }
 
+    public void Inactive() {
+        mInactive = true;
+        OutOfEnergy();
+    }
+
+    public bool IsSleeping() {
+        return mPieceManager.IsPieceSleeping(this);
+    }
+
     public virtual void Kill() {
-        GetComponent<Image>().color = Color.black;
+        transform.Rotate(new Vector3(0, 0, 90));
+        GetComponent<Image>().material = Resources.Load<Material>("Shader/Gray");
+        mAnimator.SetBool("Killed", true);
 
         Killed(this, EventArgs.Empty);
     }
@@ -206,6 +251,9 @@ public abstract class BasePiece : EventTrigger
         int damage = attackPiecePower - beAttackedPiecePower;
 
         if (damage >= 0) {
+            attackPiece.mAnimator.SetTrigger("Attack");
+            this.mAnimator.SetTrigger("BeAttack");
+
             this.mCurrentHealth -= damage;
             attackPiece.mCurrentExp += 30;
 
@@ -214,13 +262,15 @@ public abstract class BasePiece : EventTrigger
             }
         }
         else {
-            attackPiece.mCurrentHealth -= damage;
+            attackPiece.mAnimator.SetTrigger("AttackButNotEnoughDamage");
+
+            attackPiece.mCurrentHealth += (int)Math.Floor(damage / 2.0);
             attackPiece.mCurrentExp += 10;
         }
 
         attackPiece.mCurrentEnergy -= 1;
 
-        attackPiece.mAnimator.SetTrigger("Attack");
+        mPieceManager.mUIHandler.UpdatePieceVisual(this, attackPiece);
     }
 
     public void AddLevel(int level) {
@@ -229,7 +279,10 @@ public abstract class BasePiece : EventTrigger
         }
     }
 
-    protected virtual void LevelUp() {
+    protected virtual bool LevelUp() {
+        if (mLevel == 5) {
+            return false;
+        }
         mLevel++;
 
         Array values = Enum.GetValues(typeof(AttackType));
@@ -238,6 +291,8 @@ public abstract class BasePiece : EventTrigger
             AttackType attackType = (AttackType)values.GetValue(UnityEngine.Random.Range(0, values.Length));
             AddAttackPower(attackType);
         }
+
+        return true;
     }
 
     public void AddAttackPower(AttackType attackType) {
@@ -255,6 +310,10 @@ public abstract class BasePiece : EventTrigger
         field.SetValue(this, newValue);
     }
 
+    public bool IsAlly() {
+        return mTeamNum == mTurnHandler.mCurrentTeamNum;
+    }
+
     public override void OnPointerClick(PointerEventData eventData)
     {
         base.OnPointerClick(eventData);
@@ -264,8 +323,7 @@ public abstract class BasePiece : EventTrigger
             return;
         }
 
-        if (IsKilled() ||
-            mTeamNum != mTurnHandler.mCurrentTeamNum) {
+        if (IsKilled() || mInvisible || !IsAlly()) {
             return;
         }
 

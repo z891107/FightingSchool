@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Rich : BasePiece {
-    public override void Setup(int newTeamNum, AttackRange newAttackRange, PieceManager newPieceManager) {
-        base.Setup(newTeamNum, newAttackRange, newPieceManager);
+    public override void Setup(int newTeamNum, int newId, AttackRange newAttackRange, PieceManager newPieceManager) {
+        base.Setup(newTeamNum, newId, newAttackRange, newPieceManager);
         
         mRichness = 4;
     }
 
-    protected override void LevelUp() {
-        base.LevelUp();
+    protected override bool LevelUp() {
+        if (base.LevelUp()) {
+            AddAttackPower(AttackType.Richness);
+        }
 
-        AddAttackPower(AttackType.Richness);
+        return true;
     }
 }

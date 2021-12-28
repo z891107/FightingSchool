@@ -16,5 +16,6 @@ public class PieceAction : MonoBehaviour
         MoveButton.interactable = !piece.IsOutOfEnergy();
         BuildButton.interactable = !piece.IsOutOfEnergy();
         PlayCardButton.interactable = !piece.IsOutOfEnergy();
+        SleepButton.interactable = !piece.IsSleeping();
     }
 }

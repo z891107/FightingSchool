@@ -14,12 +14,13 @@ public abstract class PieceChangePosition : CardEffectData {
 	public abstract void ActionCallback(BasePiece piece, Cell position);
 
 	public override bool Action() {
-		if (mCardManager.mCurrentSelectedCell.Count >= 1) {
-			mPiece = mCardManager.mPieceManager.mCurrentSelectedPiece;
-			mCell = mCardManager.mCurrentSelectedCell[0];
+        mPiece = mCardManager.mPieceManager.mCurrentSelectedPiece;
 
-			ActionCallback(mPiece, mCell);
+		if (mCardManager.mCurrentSelectedCell.Count >= 1) {
+			mCell = mCardManager.mCurrentSelectedCell[0];
 		}
+
+        ActionCallback(mPiece, mCell);
 
 		return true;
 	}

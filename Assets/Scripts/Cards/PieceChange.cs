@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class PieceChangeAttr : CardEffectData {
-    public PieceChangeAttr(int id, CardManager cardManager) : base(id, cardManager) {}
+public abstract class PieceChange : CardEffectData {
+    public PieceChange(int id, CardManager cardManager) : base(id, cardManager) {}
 
     BasePiece mPiece;
 
@@ -26,9 +26,11 @@ public abstract class PieceChangeAttr : CardEffectData {
         mDelayedCallback(mPiece);
     }
 
-    public override void ShowRange() {
+    public override bool ShowRange() {
         var position = mCardManager.mPieceManager.mCurrentSelectedPiece.mCurrentCell.mBoardPosition;
         var attackRange = mCardManager.mPieceManager.mCurrentSelectedPiece.mAttackRange;
         mCardManager.mBoard.ShowOutlineCells(position, attackRange);
+
+        return true;
     }
 }

@@ -33,8 +33,8 @@ public class Card : EventTrigger {
         mEffectData.DelayedAction();
     }
 
-    public void ShowRange() {
-        mEffectData.ShowRange();
+    public bool ShowRange() {
+        return mEffectData.ShowRange();
     }
 
     public override void OnPointerEnter(PointerEventData eventData) {

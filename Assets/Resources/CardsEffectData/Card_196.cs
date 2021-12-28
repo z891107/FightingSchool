@@ -9,7 +9,9 @@ public class Card_196 : PieceChangePosition {
 		piece.Place(cell);
 	}
 
-	public override void ShowRange() {
+	public override bool ShowRange() {
 		mCardManager.mPieceManager.OutlineTeamsSpawnCells(mCardManager.mPieceManager.mCurrentSelectedPiece.mTeamNum);
-	}
+    
+        return true;
+    }
 }

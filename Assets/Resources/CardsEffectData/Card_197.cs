@@ -9,8 +9,10 @@ public class Card_197 : PieceChangePosition {
 		piece.Place(cell);
 	}
 
-	public override void ShowRange() {
+	public override bool ShowRange() {
 		var position = mCardManager.mPieceManager.mCurrentSelectedPiece.mCurrentCell.mBoardPosition;
 		mCardManager.mBoard.ShowOutlineCellsInCross(position, true);
+
+		return true;
 	}
 }

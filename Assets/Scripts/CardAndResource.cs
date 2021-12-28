@@ -17,7 +17,7 @@ public class CardAndResource : UIUpdater
 
         List<Card> cards = mCardManager.mCards;
         for (int i = 0; i < cards.Count; i++) {
-            UpdateSlot("CardSlot_" + (i + 1), cards[i].gameObject);
+            UpdateSlot(new String[]{"Deck", "CardSlot_" + (i + 1)}, cards[i].gameObject);
         }
     }
 

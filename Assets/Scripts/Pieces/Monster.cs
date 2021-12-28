@@ -7,8 +7,8 @@ using UnityEngine.UI;
 public class Monster : BasePiece {
     String mSpritePathPrefix = "UI/Bears/bear_";
 
-    public override void Setup(int newTeamNum, AttackRange newAttackRange, PieceManager newPieceManager) {
-        base.Setup(newTeamNum, newAttackRange, newPieceManager);
+    public override void Setup(int newTeamNum, int newId, AttackRange newAttackRange, PieceManager newPieceManager) {
+        base.Setup(newTeamNum, newId, newAttackRange, newPieceManager);
         
         mStrength = 1;
         mCharm = 1;
@@ -19,7 +19,7 @@ public class Monster : BasePiece {
         mCurrentEnergy = 0;
     }
 
-    protected override void LevelUp() {
+    protected override bool LevelUp() {
         mLevel++;
         if (mLevel <= 26) {
             GetComponent<Image>().sprite = Resources.Load<Sprite>(mSpritePathPrefix + mLevel);
@@ -29,5 +29,7 @@ public class Monster : BasePiece {
 
         AttackType attackType = (AttackType)values.GetValue(UnityEngine.Random.Range(0, values.Length));
         AddAttackPower(attackType);
+
+        return true;
     }
 }
